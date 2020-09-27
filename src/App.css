@@ -6,11 +6,11 @@
   color: #61dafb;
 }
 
-.Drug-table tr {
+.Drug-table tbody tr {
   transition: background 0.2s ease-in;
 }
 
-.Drug-table tr:nth-child(odd) {
+.Drug-table tbody tr:nth-child(odd) {
   background: silver;
 }
 
