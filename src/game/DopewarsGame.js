@@ -42,20 +42,64 @@ class DopewarsGame {
     this.locations = Location.getDefaultLocationList(
       this.defaultDrugList.length
     );
-    this.setLocation(
-      this.locations[Math.floor(Math.random() * this.locations.length)]
-    );
+    this.setLocation(this.locations[0]);
+  }
+
+  getTrenchcoatSpace() {
+    return this.trenchCoatSize;
   }
 
   setLocation(location) {
     this.location = location;
     this.debt = Math.ceil(this.debt * 1.1);
     this.day++;
-    this.drugs = Drug.changeLocation(
+    this.changeLocation(
       location.minDrug,
       location.maxDrug,
       this.defaultDrugList
     );
+  }
+
+  changeLocation(minDrugs, maxDrugs, defaultDrugList) {
+    var drugList = defaultDrugList.map((drug) => {
+      drug.zeroPrice();
+      return drug;
+    });
+
+    var drug;
+    var numEvents,
+      numDrugs = 0;
+    if (Math.random() < 0.7) numEvents = 1;
+    if (Math.random() < 0.4 && numEvents === 1) numEvents = 2;
+    if (Math.random() < 0.05 && numEvents === 2) numEvents = 3;
+    while (numEvents > 0) {
+      drug = drugList[Math.floor(Math.random() * drugList.length)];
+      if (drug.normal) continue;
+      if (drug.expensive & (!drug.cheap || Math.random() < 0.5)) {
+        drug.setExpensivePrice();
+      } else {
+        drug.setCheapPrice();
+      }
+      numEvents--;
+      numDrugs++;
+    }
+
+    var normalDrugCount = Math.floor(
+      Math.random() * (maxDrugs - minDrugs) + minDrugs
+    );
+
+    normalDrugCount -= numDrugs;
+
+    while (normalDrugCount > 0) {
+      drug = drugList[Math.floor(Math.random() * drugList.length)];
+      if (drug.price === 0) {
+        drug.setPrice();
+        normalDrugCount--;
+      }
+    }
+
+    drugList.sort((a, b) => (a.price === 0 ? 1 : -1));
+    this.drugs = drugList;
   }
 
   getGameStatus() {
@@ -67,7 +111,7 @@ class DopewarsGame {
       { name: "Day", value: this.day + " of " + this.days },
     ];
     const items = statusMap.map((item) => (
-      <span className="border rounded-lg ml-2 mt-2 bg-light">
+      <span key={item.name} className="border rounded-lg ml-2 mt-2 bg-light">
         <span className="p-sm-1">{item.name}</span>
         <span className="border-left p-sm-1 ml-1">{item.value}</span>
       </span>
@@ -77,17 +121,6 @@ class DopewarsGame {
         <div className="d-flex flex-wrap p-lg-1">{items}</div>
       </div>
     );
-  }
-
-  getDrugTable() {
-    const drugList = this.drugs.map((drug) => drug.getFormattedData());
-    const table = (
-      <table className="Drug-table">
-        <thead>{Drug.getHeader()}</thead>
-        <tbody>{drugList}</tbody>
-      </table>
-    );
-    return table;
   }
 }
 

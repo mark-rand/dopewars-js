@@ -1,5 +1,3 @@
-import React from "react";
-
 class Drug {
   constructor(name, min_price, max_price, cheap, expensive, cheap_message) {
     this.name = name;
@@ -7,45 +5,35 @@ class Drug {
     this.max_price = max_price;
     this.cheap = cheap;
     this.expensive = expensive;
+    this.normal = !(cheap || expensive);
     this.cheap_message = cheap_message;
     this.quantity = 0;
     this.setPrice();
   }
 
+  zeroPrice() {
+    this.price = 0;
+  }
+
   setPrice() {
     this.price =
-      Math.floor(Math.random() * (this.max_price - this.min_price)) + this.min_price;
-    //   Math.floor(Math.random() * ());
+      Math.floor(Math.random() * (this.max_price - this.min_price)) +
+      this.min_price;
+    this.crazyPrice = false;
   }
 
-  static changeLocation(minDrugs, maxDrugs, defaultDrugList) {
-    var drugList = defaultDrugList.map((drug) => {
-      return drug;
-    });
-
-    return drugList;
+  setExpensivePrice() {
+    this.setPrice();
+    this.price *= 4;
+    this.crazyPrice = true;
   }
 
-  getFormattedData() {
-    return (
-      <tr key={this.name}>
-        <td>{this.name}</td>
-        <td>{this.quantity}</td>
-        <td>{this.price}</td>
-      </tr>
-    );
+  setCheapPrice() {
+    this.setPrice();
+    this.price = Math.floor(this.price / 4);
+    this.crazyPrice = true;
   }
 
-  static getHeader() {
-    const header = (
-      <tr>
-        <td>Name</td>
-        <td>Quantity</td>
-        <td>Price</td>
-      </tr>
-    );
-    return header;
-  }
   static getDefaultDrugList() {
     return [
       new Drug(

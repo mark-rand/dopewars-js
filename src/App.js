@@ -2,20 +2,34 @@ import React, { Component, useState } from "react";
 import { BrowserRouter, Switch, Route, Link, Redirect } from "react-router-dom";
 import DopewarsGame from "./game/DopewarsGame";
 import "./App.css";
+const queryString = require("query-string");
+
+const game = new DopewarsGame();
 
 const App = () => {
   const [instanceKey, setInstanceKey] = useState(0);
-  const game = new DopewarsGame();
   return (
     <BrowserRouter>
       {nav()}
       <div>
         <Switch>
           <Route path="/travel">
-            <Travel game={game} updateState={setInstanceKey}/>
+            <Travel game={game} updateState={setInstanceKey} />
+          </Route>
+          <Route path="/buy">
+            <Buy game={game} />
+            <Link className="button" to="/">
+              Back
+            </Link>
+          </Route>
+          <Route path="/sell">
+            <Link to="/">Back</Link>
+          </Route>
+          <Route path="/buyorsell">
+            <Link to="/">Back</Link>
           </Route>
           <Route path="/">
-            <GameStatus key={instanceKey} game={game}/>
+            <GameStatus key={instanceKey} game={game} />
             <DrugList game={game} />
             {gameNav()}
           </Route>
@@ -75,9 +89,101 @@ function gameNav() {
   );
 }
 
-class DrugList extends Component {
+class Buy extends Component {
   render() {
-    return <div className="App">{this.props.game.getDrugTable()}</div>;
+    const drugName = queryString.parse(window.location.search).drug;
+    const drug = this.props.game.drugs[
+      this.props.game.drugs.findIndex((drug) => drug.name === drugName)
+    ];
+    if (!drug || !isViable(drug, this.props.game)) {
+      return <Redirect push to="/" />;
+    }
+    return (
+      <div>{this.props.game.cash + " " + drugName + " " + drug.price}</div>
+    );
+  }
+}
+
+var onClickAction = {
+  NONE: "none",
+  BUY: "/buy",
+  SELL: "/sell",
+  BUY_OR_SELL: "/buysell",
+};
+
+function isViable(drug, game) {
+  if (drug.price <= 0) return onClickAction.NONE;
+  if (
+    drug.price < game.cash &&
+    game.getTrenchcoatSpace() > 0 &&
+    drug.quantity > 0
+  ) {
+    return onClickAction.BUY_OR_SELL;
+  } else if (drug.quantity > 0) {
+    return onClickAction.SELL;
+  } else if (drug.price < game.cash) {
+    return onClickAction.BUY;
+  } else {
+    return onClickAction.NONE;
+  }
+}
+
+class DrugList extends Component {
+  constructor() {
+    super();
+    this.state = { action: onClickAction.NONE };
+  }
+
+  handleClick(e, drug) {
+    e.preventDefault();
+    const viable = isViable(drug, this.props.game);
+    if (viable !== onClickAction.NONE) {
+      this.setState({
+        action: viable + "?drug=" + drug.name,
+      });
+    }
+  }
+
+  render() {
+    if (this.state.action !== onClickAction.NONE) {
+      return <Redirect push to={this.state.action}></Redirect>;
+    }
+    const drugList = this.props.game.drugs.map((drug) => {
+      if (drug.price > 0 || drug.quantity > 0) {
+        var cashClass = drug.crazyPrice ? "text-danger" : null;
+        var drugClass =
+          isViable(drug, this.props.game) === onClickAction.NONE
+            ? " text-muted"
+            : null;
+        return (
+          <tr
+            onClick={(e) => this.handleClick(e, drug)}
+            key={drug.name}
+            className={drugClass}
+          >
+            <td>{drug.name}</td>
+            <td>{drug.quantity}</td>
+            <td>
+              <p className={cashClass}>${drug.price}</p>
+            </td>
+          </tr>
+        );
+      } else return null;
+    });
+    return (
+      <div className="container">
+        <table className="table table-bordered table-hover p-sm-0 m-sm-0">
+          <thead className="thead-light">
+            <tr>
+              <td>Name</td>
+              <td>Quantity</td>
+              <td>Price</td>
+            </tr>
+          </thead>
+          <tbody>{drugList}</tbody>
+        </table>
+      </div>
+    );
   }
 }
 
@@ -114,7 +220,11 @@ class Travel extends Component {
       </div>
     ));
 
-    return <div className="containerFluid">{locationButtons}</div>;
+    return (
+      <div className="containerFluid d-flex justify-content-center">
+        {locationButtons}
+      </div>
+    );
   }
 }
 

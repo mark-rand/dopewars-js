@@ -6,15 +6,9 @@
   color: #61dafb;
 }
 
-.Drug-table tbody tr {
-  transition: background 0.2s ease-in;
-}
-
-.Drug-table tbody tr:nth-child(odd) {
-  background: silver;
-}
-
-.Drug-table tr:hover {
-  background: silver;
-  cursor: pointer;
+.table-bordered td, .table-bordered th, .table-bordered td {
+  border: 1px solid #dee2e6;
+  padding: 1px;
+  margin: 0;
+  line-height: normal;
 }
